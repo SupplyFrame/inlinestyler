@@ -1,20 +1,23 @@
+from future.standard_library import install_aliases
+install_aliases()
+
 import os
 import sys
-import urlparse
 import csv
 import cssutils
 import re
-
 import requests
+
+from urllib.parse import urljoin
 from lxml import etree
-from cssselect import CSSSelector, ExpressionError
+from lxml.cssselect import CSSSelector, ExpressionError
 
 _url_re = re.compile(r'''url\((['"]?)([^'"\)]+)(['"]?)\)''', re.I)
 
 
 def fix_relative_urls(text, sourceURL):
     def fix_url(match):
-        return 'url(' + match.group(1) + urlparse.urljoin(sourceURL, match.group(2)) + match.group(3) + ')'
+        return 'url(' + match.group(1) + urljoin(sourceURL, match.group(2)) + match.group(3) + ')'
 
     return _url_re.sub(fix_url, text)
 
@@ -44,7 +47,7 @@ class Conversion:
                 try:
                     csspath = element.get("href")
                     if sourceURL:
-                        csspath = urlparse.urljoin(sourceURL, csspath)
+                        csspath = urljoin(sourceURL, csspath)
                     r = requests.get(csspath)
                     csstext = fix_relative_urls(r.text, csspath)
                 except:
@@ -54,7 +57,7 @@ class Conversion:
             element.getparent().remove(element)
 
         #convert  document to a style dictionary compatible with etree
-        styledict = self.getView(document, aggregateCSS)
+        styledict = self.get_view(document, aggregateCSS)
 
         #set inline style attribute if not one of the elements not worth styling
         ignoreList=['html','head','title','meta','link','script']
@@ -76,11 +79,11 @@ class Conversion:
                     parent = item.getparent()
                     if attr == 'href' and parent.attrib[attr].startswith('#'):
                         continue
-                    parent.attrib[attr] = urlparse.urljoin(sourceURL, parent.attrib[attr])
+                    parent.attrib[attr] = urljoin(sourceURL, parent.attrib[attr])
 
         #convert tree back to plain text html
-        self.convertedHTML = etree.tostring(document, method="xml", pretty_print=True,encoding='UTF-8')
-        self.convertedHTML= self.convertedHTML.replace('&#13;', '') #tedious raw conversion of line breaks.
+        self.convertedHTML = etree.tostring(document, method="xml", pretty_print=True, encoding='unicode')
+        self.convertedHTML = self.convertedHTML.replace('&#13;', '') #tedious raw conversion of line breaks.
 
         return self
 
@@ -94,7 +97,7 @@ class Conversion:
         else:
             return None
 
-    def getView(self, document, css):
+    def get_view(self, document, css):
 
         view = {}
         specificities = {}
@@ -114,17 +117,12 @@ class Conversion:
         #decrement client count to account for first col which is property name
         clientCount-=1
 
-        #sheet = csscombine(path="http://www.torchbox.com/css/front/import.css")
         sheet = cssutils.parseString(css)
 
         keep_rules = []
         rules = (rule for rule in sheet if rule.type in [rule.STYLE_RULE, rule.MEDIA_RULE])
         for rule in rules:
-            # these rule can't be handled staticly
-            if rule.type == rule.MEDIA_RULE:
-                keep_rules.append(rule)
-                continue
-            elif any(pseudo in rule.selectorText for pseudo in [':hover', ':active', ':visited']):
+            if any(pseudo in rule.selectorText for pseudo in [':hover', ':active', ':visited']):
                 keep_rules.append(rule)
                 continue
 
@@ -141,11 +139,7 @@ class Conversion:
                             specificities[element] = {}
 
                             # add inline style if present
-                            inlinestyletext= element.get('style')
-                            if inlinestyletext:
-                                inlinestyle= cssutils.css.CSSStyleDeclaration(cssText=inlinestyletext)
-                            else:
-                                inlinestyle = None
+                            inlinestyle = self.styleattribute(element)
                             if inlinestyle:
                                 for p in inlinestyle:
                                     # set inline style specificity

@@ -1,0 +1,26 @@
+[run]
+source = inlinestyler
+include = */inlinestyler/*
+omit =
+  */.tox/*.py
+  */tests/*.py
+
+[report]
+exclude_lines =
+    pdefragma: no cover
+    def __repr__
+
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+
+ignore_errors = True
+
+omit =
+    */examples/*
+    examples/*
+    */tests/*
+    tests/*
+    */setup.py
+    setup.py
+    */site-packages/pkg_resources/*

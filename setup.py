@@ -14,7 +14,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     keywords=['html', 'css', 'inline', 'style', 'email'],
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests.*", "tests"]),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Other Environment',

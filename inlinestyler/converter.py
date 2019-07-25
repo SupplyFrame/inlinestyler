@@ -1,5 +1,6 @@
 from future.standard_library import install_aliases
 install_aliases()
+from builtins import str
 
 import os
 import sys
@@ -17,7 +18,7 @@ _url_re = re.compile(r'''url\((['"]?)([^'"\)]+)(['"]?)\)''', re.I)
 
 def fix_relative_urls(text, sourceURL):
     def fix_url(match):
-        return 'url(' + match.group(1) + urljoin(sourceURL, match.group(2)) + match.group(3) + ')'
+        return 'url(' + match.group(1) + urljoin(str(sourceURL), match.group(2)) + match.group(3) + ')'
 
     return _url_re.sub(fix_url, text)
 
@@ -82,7 +83,7 @@ class Conversion:
                     parent.attrib[attr] = urljoin(sourceURL, parent.attrib[attr])
 
         #convert tree back to plain text html
-        self.convertedHTML = etree.tostring(document, method="xml", pretty_print=True, encoding='unicode')
+        self.convertedHTML = etree.tostring(document, method="xml", pretty_print=True, encoding='utf-8')
         self.convertedHTML = self.convertedHTML.replace('&#13;', '') #tedious raw conversion of line breaks.
 
         return self
@@ -120,7 +121,7 @@ class Conversion:
         sheet = cssutils.parseString(css)
 
         keep_rules = []
-        rules = (rule for rule in sheet if rule.type in [rule.STYLE_RULE, rule.MEDIA_RULE])
+        rules = (rule for rule in sheet if rule.type in [rule.STYLE_RULE])
         for rule in rules:
             if any(pseudo in rule.selectorText for pseudo in [':hover', ':active', ':visited']):
                 keep_rules.append(rule)

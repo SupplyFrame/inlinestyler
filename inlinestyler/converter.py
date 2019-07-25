@@ -83,7 +83,7 @@ class Conversion:
                     parent.attrib[attr] = urljoin(sourceURL, parent.attrib[attr])
 
         #convert tree back to plain text html
-        self.convertedHTML = etree.tostring(document, method="xml", pretty_print=True, encoding='utf-8')
+        self.convertedHTML = etree.tostring(document, method="xml", pretty_print=True, encoding='unicode')
         self.convertedHTML = self.convertedHTML.replace('&#13;', '') #tedious raw conversion of line breaks.
 
         return self

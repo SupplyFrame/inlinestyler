@@ -18,7 +18,7 @@ _url_re = re.compile(r'''url\((['"]?)([^'"\)]+)(['"]?)\)''', re.I)
 
 def fix_relative_urls(text, sourceURL):
     def fix_url(match):
-        return 'url(' + match.group(1) + urljoin(str(sourceURL), match.group(2)) + match.group(3) + ')'
+        return 'url(' + str(match.group(1)) + urljoin(str(sourceURL), str(match.group(2))) + str(match.group(3)) + ')'
 
     return _url_re.sub(fix_url, text)
 

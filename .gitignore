@@ -122,4 +122,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-151.101.196.133
+*.pyc

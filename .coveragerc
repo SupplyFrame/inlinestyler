@@ -6,6 +6,8 @@ omit =
   */tests/*.py
 
 [report]
+fail_under = 95
+skip_covered = True
 exclude_lines =
     pdefragma: no cover
     def __repr__
